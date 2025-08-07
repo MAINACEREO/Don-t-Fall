@@ -1,0 +1,39 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: black;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    background: url("images/background.png") no-repeat center center;
+    background-size: cover;
+}
+
+/* Mobile controls */
+.controls {
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+.controls button {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+    background: rgba(255, 255, 255, 0.5);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    canvas {
+        width: 100vw;
+        height: 100vh;
+    }
+}
