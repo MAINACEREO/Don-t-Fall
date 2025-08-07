@@ -1,0 +1,99 @@
+/* style.css */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: #000;
+  overflow: hidden;
+}
+
+#game {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  background: url('bg.png') no-repeat center center;
+  background-size: cover;
+  overflow: hidden;
+}
+
+#player {
+  width: 40px;
+  height: 40px;
+  background: url('player.png') no-repeat center;
+  background-size: cover;
+  position: absolute;
+  z-index: 10;
+}
+
+.platform {
+  width: 120px;
+  height: 20px;
+  background: url('platform.png') no-repeat center;
+  background-size: cover;
+  position: absolute;
+  border-radius: 5px;
+}
+
+.coin {
+  width: 20px;
+  height: 20px;
+  background: url('coin.png') no-repeat center;
+  background-size: cover;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 5;
+}
+
+#scoreBoard {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: white;
+  font-size: 18px;
+  z-index: 20;
+}
+
+#gameOver {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 20px;
+  border-radius: 15px;
+  display: none;
+  z-index: 30;
+  text-align: center;
+}
+
+#gameOver button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  font-size: 16px;
+  background: yellow;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#controls {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+  z-index: 15;
+}
+
+#controls button {
+  padding: 15px;
+  font-size: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid white;
+  cursor: pointer;
+}

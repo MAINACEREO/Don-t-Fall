@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Don't Fall!</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game">
+    <div id="player"></div>
+    <div id="platforms"></div>
+    <div id="coinsContainer"></div>
+    <div id="scoreBoard">
+      Score: <span id="score">0</span> | High: <span id="highscore">0</span>
+    </div>
+    <div id="gameOver">
+      <h2>Game Over</h2>
+      <p>Your Score: <span id="finalScore"></span></p>
+      <p>High Score: <span id="finalHighScore"></span></p>
+      <button onclick="restartGame()">Restart</button>
+    </div>
+    <div id="controls">
+      <button onclick="moveLeft()">⬅️</button>
+      <button onclick="moveRight()">➡️</button>
+    </div>
+  </div>
+
+  <!-- Sound Effects -->
+  <audio id="jumpSound" src="jump.mp3" preload="auto"></audio>
+  <audio id="coinSound" src="coin.mp3" preload="auto"></audio>
+  <audio id="gameOverSound" src="gameover.mp3" preload="auto"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
