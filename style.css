@@ -1,0 +1,60 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #222;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    text-align: center;
+}
+
+.menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.85);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+button {
+    background: orange;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px;
+    color: white;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #ff6600;
+}
+
+#pauseBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: red;
+}
+
+canvas {
+    display: block;
+    margin: auto;
+    background: url('assets/images/background.png') no-repeat center center;
+    background-size: cover;
+}
+
+/* Mobile Scaling */
+@media (max-width: 768px) {
+    canvas {
+        width: 100vw;
+        height: 100vh;
+    }
+    button {
+        font-size: 16px;
+        padding: 8px 16px;
+    }
+}
