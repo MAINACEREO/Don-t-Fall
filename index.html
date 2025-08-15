@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>Sky Dash — Full (Single File)</title>
+<style>
+  :root{
+    --bg:#0b1020; --fg:#e9eefc; --muted:#9fb0cc; --accent:#5cf4c7; --card:#121a33;
+    --ok:#36e07b; --danger:#ff5970; --warn:#ffd166;
+  }
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--fg);
+    background:radial-gradient(1200px 800px at 70% -10%, #1a2250 0%, var(--bg) 60%) fixed;
+    font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .wrap{position:relative;width:min(520px,96vw);height:min(920px,96vh);}
+  canvas{width:100%;height:100%;background:linear-gradient(#0c1433,#070b18 60%);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.55)}
+  .stars{position:absolute;inset:0;pointer-events:none;border-radius:20px;mix-blend-mode:screen;
+    background-image:
+      radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.6), transparent 60%),
+      radial-gradient(1px 1px at 70% 10%, rgba(255,255,255,.35), transparent 60%),
+      radial-gradient(1.5px 1.5px at 40% 70%, rgba(255,255,255,.45), transparent 60%);
+  }
+
+  /* panels */
+  .panel{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;
+    background:linear-gradient(180deg, rgba(7,11,24,.92), rgba(7,11,24,.88));backdrop-filter:blur(6px);
+    border-radius:20px;padding:18px;text-align:center}
+  .panel.show{display:flex}
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:18px 16px;max-width:92%}
+  h1{margin:0 0 4px 0;font-size:30px}
+  h2{margin:0 0 10px 0;font-size:18px;color:var(--muted)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .pill{padding:10px 14px;border-radius:999px;font-weight:800;letter-spacing:.3px;cursor:pointer;user-select:none}
+  .ok{background:var(--ok);color:#00170a}
+  .ghost{background:transparent;border:1px solid rgba(255,255,255,.18)}
+  .danger{background:var(--danger);color:#fff}
+
+  /* top ui */
+  .ui{position:absolute;inset:0;pointer-events:none}
+  .topbar{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;gap:8px}
+  .chip{pointer-events:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:8px 12px;border-radius:14px;display:flex;align-items:center;gap:8px}
+  .btn{cursor:pointer}
+
+  /* touch controls */
+  .controls{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:space-between;gap:12px;padding:0 12px;pointer-events:auto}
+  .control-btn{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:14px 0;font-weight:700}
+
+  /* shop */
+  .shop{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-height:60vh;overflow:auto;padding-right:4px}
+  .item{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+  .swatch{width:38px;height:38px;border-radius:12px;margin:6px auto}
+  .small{font-size:12px;color:var(--muted)}
+  .hint{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:var(--muted);font-size:12px}
+  .tag{font-size:11px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2)}
+  .disabled{opacity:.55;pointer-events:none}
+  .sel{outline:2px solid var(--ok)}
+  .ability{font-size:11px;opacity:.8}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="game" width="520" height="920"></canvas>
+    <div class="stars"></div>
+
+    <!-- UI -->
+    <div class="ui" id="gameUI" style="display:none">
+      <div class="topbar">
+        <div class="chip">Score: <b id="score">0</b></div>
+        <div class="row">
+          <div class="chip btn" id="pauseBtn">⏸️ Pause</div>
+          <div class="chip btn" id="muteBtn">🔊</div>
+          <div class="chip btn" id="shopBtnTop">🛒 Shop</div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="control-btn btn" id="leftBtn">◀</div>
+        <div class="control-btn btn" id="rightBtn">▶</div>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <div class="panel show" id="menu">
+      <div class="card">
+        <h1>Sky Dash</h1>
+        <h2>Auto-jump tower climber</h2>
+        <div class="row">
+          <div class="pill ok btn" id="startBtn">▶ Start</div>
+          <div class="pill ghost btn" id="openShopBtn">🛒 Shop</div>
+          <div class="pill ghost btn" id="howBtn">❔ How to Play</div>
+        </div>
+      </div>
+      <div class="card small">Best: <b id="bestScoreMenu">0</b> • Coins: <b id="coinsMenu">0</b></div>
+      <div class="hint">Tip: Left/Right tap/keys to change direction. Space = Pause/Resume.</div>
+    </div>
+
+    <!-- PAUSED -->
+    <div class="panel" id="paused">
+      <div class="card">
+        <h1>Paused</h1>
+        <div class="row">
+          <div class="pill ok btn" id="resumeBtn">▶ Resume</div>
+          <div class="pill ghost btn" id="restartBtn">↻ Restart</div>
+          <div class="pill danger btn" id="menuBtn">☰ Menu</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div class="panel" id="gameover">
+      <div class="card">
+        <h1>Game Over</h1>
+        <h2>Your score: <span id="finalScore">0</span> — Best: <span id="bestScore">0</span></h2>
+        <div class="row">
+          <div class="pill ok btn" id="retryBtn">↻ Try Again</div>
+          <div class="pill ghost btn" id="goMenuBtn">☰ Menu</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHOP -->
+    <div class="panel" id="shop">
+      <div class="card" style="width:92%">
+        <h1>Shop</h1>
+        <h2>Coins: <span id="coins">0</span></h2>
+        <div class="shop" id="shopGrid"></div>
+        <div class="row" style="margin-top:12px">
+          <div class="pill ghost btn" id="closeShopBtn">Close</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW TO -->
+    <div class="panel" id="how">
+      <div class="card">
+        <h1>How to Play</h1>
+        <div class="small" style="max-width:360px">
+          Ball auto-jumps on landing. Tap left/right half to change direction.
+          Collect coins, avoid spikes/hazards. Power-ups: Shield (1 hit), Magnet (pull coins), 2x Score (10s).
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="pill ghost btn" id="closeHowBtn">Got it</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ========= Helpers ========= */
+const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+const rand=(a,b)=>Math.random()*(b-a)+a;
+const choice=a=>a[(Math.random()*a.length)|0];
+
+/* ========= Save / Audio ========= */
+const store={get:()=>JSON.parse(localStorage.getItem('skydash')||'{}'),
+             set:(d)=>localStorage.setItem('skydash', JSON.stringify({...store.get(),...d}))};
+let coins=store.get().coins||0;
+let best =store.get().best ||0;
+let muted=JSON.parse(localStorage.getItem('muted')||'false');
+const AC = new (window.AudioContext||window.webkitAudioContext)();
+function beep(f=440,t=0.08,type='sine',vol=0.08){ if(muted) return;
+  const o=AC.createOscillator(); const g=AC.createGain();
+  o.type=type; o.frequency.value=f; g.gain.value=vol; o.connect(g); g.connect(AC.destination);
+  o.start(); setTimeout(()=>o.stop(), t*1000);
+}
+
+/* ========= Canvas / DPI ========= */
+const canvas=document.getElementById('game'); const ctx=canvas.getContext('2d');
+let DPR=window.devicePixelRatio||1;
+function fit(){ const r=canvas.getBoundingClientRect(); canvas.width=(r.width*DPR)|0; canvas.height=(r.height*DPR)|0; }
+fit(); addEventListener('resize', fit);
+
+/* ========= Game State ========= */
+let running=false, paused=false, over=false; let score=0;
+let worldY=0; // camera offset
+let difficulty=1;
+const G=0.0018; const JUMP=-0.9;
+
+/* ========= Player ========= */
+class Player{
+  constructor(){ this.reset(); }
+  reset(){
+    this.x=canvas.width/2; this.y=canvas.height-120*DPR;
+    this.vx=0.22; this.vy=0; this.dir=1; this.size=22*DPR;
+    this.skin=store.get().skin||'mint'; this.alive=true; this.trail=[];
+    this.hasShield=false; this.magnet=false; this.double=false;
+    this.powerTimers={magnet:0,double:0};
+    // apply skin innate ability
+    const ab = skinAbility(this.skin);
+    if(ab==='shield') this.hasShield=true;
+    if(ab==='magnet') this.magnet=true, this.powerTimers.magnet=8000;
+    if(ab==='double') this.double=true, this.powerTimers.double=8000;
+  }
+  update(dt){
+    if(!this.alive) return;
+    this.x += this.vx*this.dir*dt;
+    if(this.x<20*DPR || this.x>canvas.width-20*DPR){ this.dir*=-1; beep(220,0.05,'square',0.04); }
+    this.vy += G*dt; this.y += this.vy*dt;
+
+    // magnet effect
+    if(this.magnet){
+      coinsArr.forEach(c=>{
+        const dx=c.x-this.x, dy=c.y-this.y, d=Math.hypot(dx,dy);
+        if(d<180*DPR){ c.x -= dx*0.02*dt; c.y -= dy*0.02*dt; }
+      });
+      this.powerTimers.magnet-=dt; if(this.powerTimers.magnet<=0) this.magnet=false;
+    }
+    if(this.double){ this.powerTimers.double-=dt; if(this.powerTimers.double<=0) this.double=false; }
+
+    this.trail.push({x:this.x,y:this.y});
+    if(this.trail.length>14) this.trail.shift();
+
+    // fell below screen
+    if(this.y - worldY > canvas.height + 80*DPR){ this.alive=false; endGame(); }
+  }
+  jump(){ this.vy=JUMP; beep(660,0.06,'triangle',0.08); }
+  switch(d){ this.dir=d; beep(420,0.03,'sawtooth',0.04); }
+  hit(){
+    if(this.hasShield){ this.hasShield=false; beep(200,0.18,'triangle',0.12); return; }
+    this.alive=false; endGame();
+  }
+  draw(){
+    const c=skinColor(this.skin);
+    ctx.save();
+    // trail
+    for(let i=0;i<this.trail.length;i++){
+      const t=this.trail[i];
+      ctx.globalAlpha=0.05+(i/this.trail.length)*0.15; ctx.beginPath();
+      ctx.arc(t.x, t.y-worldY, this.size*0.9, 0, Math.PI*2); ctx.fillStyle=c; ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    // body
+    ctx.beginPath(); ctx.arc(this.x, this.y-worldY, this.size, 0, Math.PI*2);
+    ctx.fillStyle=c; ctx.shadowBlur=20; ctx.shadowColor=c; ctx.fill(); ctx.shadowBlur=0;
+    // eyes
+    ctx.fillStyle='rgba(0,0,0,.55)'; ctx.beginPath(); ctx.arc(this.x-6*DPR, this.y-worldY-4*DPR, 3*DPR, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(this.x+6*DPR, this.y-worldY-4*DPR, 3*DPR, 0, Math.PI*2); ctx.fill();
+    // shield ring
+    if(this.hasShield){
+      ctx.strokeStyle='rgba(92,244,199,.7)'; ctx.lineWidth=2*DPR;
+      ctx.beginPath(); ctx.arc(this.x, this.y-worldY, this.size+6*DPR, 0, Math.PI*2); ctx.stroke();
+    }
+    // power glows
+    if(this.magnet){ ctx.strokeStyle='rgba(255,255,255,.4)'; ctx.setLineDash([6*DPR,6*DPR]); ctx.beginPath(); ctx.arc(this.x, this.y-worldY, 180*DPR*(0.6+0.4*Math.sin(performance.now()/250)), 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]); }
+    if(this.double){ ctx.strokeStyle='rgba(255,209,102,.5)'; ctx.lineWidth=1.5*DPR; ctx.beginPath(); ctx.arc(this.x, this.y-worldY, this.size+12*DPR, 0, Math.PI*2); ctx.stroke(); }
+    ctx.restore();
+  }
+}
+
+/* ========= Skins ========= */
+function skinColor(id){
+  const map={
+    mint:'#5cf4c7', gold:'#ffd166', rose:'#ff7eb6', ocean:'#6ecbff', neon:'#b8ff6e', violet:'#c3a3ff',
+    coral:'#ff9b8a', sky:'#9be1ff', lime:'#a8ff8a', peach:'#ffd2b3', pearl:'#ffffff', amber:'#ffbf69',
+    aqua:'#67ffd6', steel:'#b0c4de', cherry:'#ff6b88',
+    // special (ability)
+    guard:'#66ffd1', magneto:'#9ff', doubler:'#ffe07a', frost:'#aeeaff', ember:'#ff9a6e',
+    pulse:'#c4a2ff', blaze:'#ff7d7d', glitch:'#8afff1', jade:'#7dffb5', azure:'#7dbfff',
+    ghost:'#b7b7b7', comet:'#9dffcb', nova:'#ffd7f5', sonic:'#9bf7ff', void:'#b3a0ff'
+  };
+  return map[id]||'#5cf4c7';
+}
+function skinAbility(id){
+  const special={
+    guard:'shield', magneto:'magnet', doubler:'double',
+    frost:null, ember:null, pulse:null, blaze:null, glitch:null, jade:null, azure:null,
+    ghost:'shield', comet:null, nova:'double', sonic:null, void:null
+  };
+  return special[id]||null;
+}
+
+/* ========= World objects ========= */
+class Platform{
+  constructor(x,y,w=110*DPR,m=false,type='normal'){ this.x=x; this.y=y; this.w=w; this.h=16*DPR;
+    this.m=m; this.speed=m? rand(0.08,0.18)*(Math.random()<0.5?-1:1):0;
+    this.type=type; this.touched=false; this.dropTimer=0;
+  }
+  update(dt){
+    if(this.m){ this.x += this.speed*dt; if(this.x<20*DPR||this.x+this.w>canvas.width-20*DPR) this.speed*=-1; }
+    if(this.type==='brittle' && this.touched){ this.dropTimer+=dt; if(this.dropTimer>280){ this.y += 0.35*dt; } }
+  }
+  draw(){
+    const y=this.y-worldY; if(y>canvas.height+60*DPR||y<-100*DPR) return;
+    const g=ctx.createLinearGradient(this.x,y,this.x,y+this.h); g.addColorStop(0,'#2a355d'); g.addColorStop(1,'#0f162e'); ctx.fillStyle=g; ctx.fillRect(this.x,y,this.w,this.h);
+    ctx.fillStyle='rgba(92,244,199,.25)'; ctx.fillRect(this.x,y,this.w,2*DPR);
+    if(this.type==='brittle'){ ctx.fillStyle='rgba(255,255,255,.12)'; for(let i=0;i<this.w;i+=12*DPR) ctx.fillRect(this.x+i,y+this.h-3*DPR,6*DPR,2*DPR); }
+  }
+}
+class Coin{ constructor(x,y){ this.x=x; this.y=y; this.r=8*DPR; this.t=0; this.take=false; }
+  update(dt){ this.t+=dt*0.005; }
+  draw(){ const y=this.y-worldY; if(this.take||y>canvas.height+60*DPR||y<-60*DPR) return;
+    ctx.save(); ctx.translate(this.x,y); ctx.rotate(Math.sin(this.t*0.02)*0.4);
+    ctx.fillStyle='#ffd166'; ctx.beginPath(); ctx.arc(0,0,this.r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.arc(0,0,this.r*0.55,0,Math.PI*2); ctx.fill(); ctx.restore();
+}}
+class Spike{ // triangle on a platform
+  constructor(p,offset){ this.p=p; this.offset=offset; this.w=18*DPR; this.h=16*DPR; }
+  draw(){ const y=this.p.y-worldY-0.5*DPR; const x=this.p.x+this.offset;
+    if(y>canvas.height+60*DPR||y<-100*DPR) return;
+    ctx.fillStyle='#ff6b7a'; ctx.beginPath();
+    ctx.moveTo(x,y); ctx.lineTo(x+this.w/2,y-this.h); ctx.lineTo(x+this.w,y); ctx.closePath(); ctx.fill();
+  }
+  hit(px,py,r){ const x=this.p.x+this.offset, y=this.p.y; // AABB approx
+    return (px > x- r && px < x+this.w + r && py > y-this.h- r && py < y + r);
+  }
+}
+class Hazard{ // moving orb
+  constructor(x,y){ this.x=x; this.y=y; this.r=10*DPR; this.vx=rand(0.08,0.16)*(Math.random()<0.5?-1:1); }
+  update(dt){ this.x+=this.vx*dt; if(this.x<this.r+20*DPR||this.x>canvas.width-this.r-20*DPR) this.vx*=-1; }
+  draw(){ const y=this.y-worldY; if(y>canvas.height+60*DPR||y<-60*DPR) return;
+    ctx.fillStyle='#ff8aa0'; ctx.beginPath(); ctx.arc(this.x,y,this.r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.25)'; ctx.beginPath(); ctx.arc(this.x-3*DPR,y-3*DPR,this.r*0.35,0,Math.PI*2); ctx.fill();
+  }
+  hit(px,py,r){ const dx=this.x-px, dy=this.y-py; return (dx*dx+dy*dy) < (this.r+r*0.8)*(this.r+r*0.8);}
+}
+class PowerUp{ // shield/magnet/double
+  constructor(x,y,type){ this.x=x; this.y=y; this.type=type; this.r=10*DPR; this.t=0; this.take=false; }
+  update(dt){ this.t+=dt; }
+  draw(){ const y=this.y-worldY; if(this.take||y>canvas.height+60*DPR||y<-60*DPR) return;
+    ctx.save(); ctx.translate(this.x,y); ctx.rotate(this.t*0.002);
+    let c = this.type==='shield' ? '#5cf4c7' : this.type==='magnet' ? '#9be1ff' : '#ffd166';
+    ctx.fillStyle=c; ctx.beginPath(); ctx.arc(0,0,this.r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.arc(0,0,this.r*0.6,0,Math.PI*2); ctx.fill(); ctx.restore();
+  }
+}
+
+/* ========= Containers ========= */
+let player, plats=[], coinsArr=[], spikes=[], hazards=[], powerups=[], nextY;
+
+/* ========= Spawning ========= */
+function spawnPlatform(y){
+  const w = clamp(140*DPR - (difficulty*8*DPR), 70*DPR, 180*DPR);
+  const x = rand(30*DPR, canvas.width - w - 30*DPR);
+  const moving = Math.random()<Math.min(0.1+0.02*difficulty,0.5);
+  const type = Math.random()<0.12 ? 'brittle':'normal';
+  const p=new Platform(x,y,w,moving,type); plats.push(p);
+
+  // coin / power-up
+  if(Math.random()<0.55) coinsArr.push(new Coin(x+w/2, y-16*DPR));
+  if(Math.random()<Math.min(0.06+0.005*difficulty,0.12)){
+    const kind = choice(['shield','magnet','double']);
+    powerups.push(new PowerUp(x+w/2, y-28*DPR, kind));
+  }
+  // spikes occasionally
+  if(Math.random()<Math.min(0.15+0.01*difficulty,0.35)){
+    const count = (Math.random()<0.6)?1:2;
+    for(let i=0;i<count;i++){
+      const off = rand(6*DPR, Math.max(6*DPR, w-24*DPR));
+      spikes.push(new Spike(p, off));
+    }
+  }
+  // moving hazard sometimes above
+  if(Math.random()<Math.min(0.08+0.01*difficulty,0.22)){
+    hazards.push(new Hazard(x+w/2, y-46*DPR));
+  }
+}
+
+/* ========= Init / World update ========= */
+function init(){
+  running=true; paused=false; over=false; score=0; worldY=0; difficulty=1;
+  player=new Player(); plats=[]; coinsArr=[]; spikes=[]; hazards=[]; powerups=[];
+  let y=canvas.height-80*DPR; for(let i=0;i<8;i++){ spawnPlatform(y); y-=80*DPR; }
+  nextY=y; setScore(0); document.getElementById('gameUI').style.display='block';
+  loop(performance.now());
+}
+
+function updateWorld(dt){
+  // keep generating platforms above camera
+  while(nextY > worldY - 700*DPR){ nextY -= rand(60*DPR, 120*DPR); spawnPlatform(nextY); difficulty+=0.03; }
+
+  plats.forEach(p=>p.update(dt));
+  coinsArr.forEach(c=>c.update(dt));
+  hazards.forEach(h=>h.update(dt));
+  powerups.forEach(p=>p.update(dt));
+
+  // clean far objects
+  plats = plats.filter(p => p.y - worldY < canvas.height + 160*DPR);
+  coinsArr = coinsArr.filter(c => !c.take && c.y - worldY < canvas.height + 120*DPR);
+  hazards = hazards.filter(h => h.y - worldY < canvas.height + 140*DPR);
+  spikes  = spikes.filter(s => s.p.y - worldY < canvas.height + 140*DPR);
+  powerups= powerups.filter(p => !p.take && p.y - worldY < canvas.height + 140*DPR);
+
+  /* ----- CAMERA FOLLOW (the fix) -----
+     Player ko screen ke top se ~45% anchor par rakhta hai.
+     Yaha worldY ko seedha target par set/lerp karte hain, isliye
+     upar chadne par kamera guaranteed upar jayega. */
+  const targetCam = Math.max(0, player.y - canvas.height*0.45);
+  worldY += (targetCam - worldY) * (0.20 * dt/16.6);
+
+  // collisions: platforms
+  for(const p of plats){
+    const py=player.y;
+    if(player.vy>0 && py+player.size < p.y+10*DPR && py+player.size+player.vy*1.2 >= p.y){
+      if(player.x > p.x- player.size*0.6 && player.x < p.x+p.w + player.size*0.6){
+        player.y = p.y - player.size;
+        p.touched=true;
+        player.jump();
+        const gain = Math.floor((player.double?2:1) * (1*difficulty));
+        score += gain; setScore(score);
+      }
+    }
+  }
+  // coins
+  for(const c of coinsArr){
+    const dx=c.x-player.x, dy=(c.y-player.y), rr=(c.r+player.size*0.7);
+    if(dx*dx+dy*dy < rr*rr){ c.take=true; coins+=1; store.set({coins}); updateCoinsUI(); beep(880,0.05,'sine',0.12); }
+  }
+  // powerups
+  for(const p of powerups){
+    const dx=p.x-player.x, dy=p.y-player.y, rr=(p.r+player.size*0.7);
+    if(dx*dx+dy*dy < rr*rr){
+      p.take=true; beep(520,0.08,'triangle',0.12);
+      if(p.type==='shield') player.hasShield=true;
+      if(p.type==='magnet'){ player.magnet=true; player.powerTimers.magnet=10000; }
+      if(p.type==='double'){ player.double=true; player.powerTimers.double=10000; }
+    }
+  }
+  // hazards & spikes
+  for(const h of hazards){ if(h.hit(player.x, player.y, player.size)) { player.hit(); break; } }
+  for(const s of spikes){ if(s.hit(player.x, player.y, player.size)) { player.hit(); break; } }
+}
+
+/* ========= Drawing ========= */
+function drawBG(){
+  ctx.save(); ctx.globalAlpha=0.15;
+  for(let i=0;i<6;i++){
+    const y=((worldY*0.2)+(i*200*DPR))%(canvas.height+200*DPR)-200*DPR;
+    ctx.fillStyle=i%2?'#0e1530':'#0a1127'; ctx.fillRect(0,-y,canvas.width,40*DPR);
+  }
+  ctx.restore();
+}
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawBG();
+  plats.forEach(p=>p.draw());
+  spikes.forEach(s=>s.draw());
+  hazards.forEach(h=>h.draw());
+  coinsArr.forEach(c=>c.draw());
+  powerups.forEach(p=>p.draw());
+  player.draw();
+}
+
+/* ========= Main loop ========= */
+let last=0;
+function loop(t){
+  if(!running) return;
+  const dt=clamp(t-last,8,40); last=t;
+  if(!paused && !over){ player.update(dt); updateWorld(dt); draw(); }
+  requestAnimationFrame(loop);
+}
+
+/* ========= Score / End ========= */
+function setScore(s){ document.getElementById('score').textContent=s; }
+function updateCoinsUI(){ document.getElementById('coins').textContent=coins; document.getElementById('coinsMenu').textContent=coins; }
+function endGame(){
+  over=true; running=false;
+  best=Math.max(best,score); store.set({best,coins});
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('bestScore').textContent=best;
+  document.getElementById('bestScoreMenu').textContent=best;
+  show('gameover'); document.getElementById('gameUI').style.display='none';
+}
+
+/* ========= Shop (30 skins) ========= */
+const items=[
+  // 15 normal
+  {id:'mint',  label:'Mint',  price:0,  color:skinColor('mint')},
+  {id:'gold',  label:'Gold',  price:20, color:skinColor('gold')},
+  {id:'rose',  label:'Rose',  price:20, color:skinColor('rose')},
+  {id:'ocean', label:'Ocean', price:20, color:skinColor('ocean')},
+  {id:'neon',  label:'Neon',  price:25, color:skinColor('neon')},
+  {id:'violet',label:'Violet',price:25, color:skinColor('violet')},
+  {id:'coral', label:'Coral', price:20, color:skinColor('coral')},
+  {id:'sky',   label:'Sky',   price:20, color:skinColor('sky')},
+  {id:'lime',  label:'Lime',  price:20, color:skinColor('lime')},
+  {id:'peach', label:'Peach', price:20, color:skinColor('peach')},
+  {id:'pearl', label:'Pearl', price:25, color:skinColor('pearl')},
+  {id:'amber', label:'Amber', price:25, color:skinColor('amber')},
+  {id:'aqua',  label:'Aqua',  price:25, color:skinColor('aqua')},
+  {id:'steel', label:'Steel', price:25, color:skinColor('steel')},
+  {id:'cherry',label:'Cherry',price:25, color:skinColor('cherry')},
+  // 15 special (all price 30)
+  {id:'guard',  label:'Guard',   price:30, color:skinColor('guard'),  ability:'shield'},
+  {id:'magneto',label:'Magneto', price:30, color:skinColor('magneto'),ability:'magnet'},
+  {id:'doubler',label:'Doubler', price:30, color:skinColor('doubler'),ability:'double'},
+  {id:'frost',  label:'Frost',   price:30, color:skinColor('frost')},
+  {id:'ember',  label:'Ember',   price:30, color:skinColor('ember')},
+  {id:'pulse',  label:'Pulse',   price:30, color:skinColor('pulse')},
+  {id:'blaze',  label:'Blaze',   price:30, color:skinColor('blaze')},
+  {id:'glitch', label:'Glitch',  price:30, color:skinColor('glitch')},
+  {id:'jade',   label:'Jade',    price:30, color:skinColor('jade')},
+  {id:'azure',  label:'Azure',   price:30, color:skinColor('azure')},
+  {id:'ghost',  label:'Ghost',   price:30, color:skinColor('ghost'), ability:'shield'},
+  {id:'comet',  label:'Comet',   price:30, color:skinColor('comet')},
+  {id:'nova',   label:'Nova',    price:30, color:skinColor('nova'),   ability:'double'},
+  {id:'sonic',  label:'Sonic',   price:30, color:skinColor('sonic')},
+  {id:'void',   label:'Void',    price:30, color:skinColor('void')}
+];
+const owned=new Set(store.get().owned||['mint']);
+const selectedSkin = () => store.get().skin || 'mint';
+
+function renderShop(){
+  const grid=document.getElementById('shopGrid');
+  grid.innerHTML='';
+  const current = selectedSkin();
+
+  for(const it of items){
+    const div=document.createElement('div'); div.className='item';
+    div.title = owned.has(it.id) ? 'Tap to select' : `Price: ${it.price} coins`;
+
+    const sw=document.createElement('div'); sw.className='swatch'; sw.style.background=it.color; div.appendChild(sw);
+
+    const nm=document.createElement('div'); nm.style.fontWeight='700'; nm.style.textAlign='center'; nm.textContent=it.label; div.appendChild(nm);
+
+    const ability = document.createElement('div');
+    ability.className='ability small';
+    ability.textContent = it.ability ? `Ability: ${it.ability}` : 'Classic';
+    div.appendChild(ability);
+
+    const priceLine=document.createElement('div'); priceLine.className='small';
+    priceLine.textContent = owned.has(it.id) ? 'Owned' : `Price: ${it.price} 🪙`; div.appendChild(priceLine);
+
+    const act=document.createElement('div'); act.className='pill btn'; act.style.marginTop='8px'; act.style.textAlign='center';
+
+    if(owned.has(it.id)){
+      const isSel = current===it.id;
+      act.textContent= isSel ? 'Selected' : 'Select';
+      if(isSel){ div.classList.add('sel'); }
+      act.onclick=()=>{
+        if(current!==it.id){
+          store.set({skin:it.id});
+          if(player) player.skin=it.id;   // apply live
+          renderShop();
+        }
+      };
+    } else {
+      act.textContent=`Buy • ${it.price} 🪙`;
+      if(coins < it.price) act.classList.add('disabled');
+      act.onclick=()=>{
+        if(coins>=it.price){
+          coins -= it.price; store.set({coins}); updateCoinsUI();
+          owned.add(it.id); store.set({owned:[...owned]});
+          // auto-select
+          store.set({skin:it.id}); if(player) player.skin=it.id;
+          beep(540,0.08,'triangle',0.12);
+          renderShop();
+        } else { beep(180,0.12,'square',0.12); }
+      };
+    }
+    // make card clickable
+    div.onclick = act.onclick;
+
+    const tag=document.createElement('div'); tag.className='tag small';
+    tag.textContent = owned.has(it.id) ? (current===it.id ? 'Active' : 'Owned') : (it.ability?'Special':'Locked');
+    div.appendChild(tag);
+
+    div.appendChild(act);
+    grid.appendChild(div);
+  }
+  updateCoinsUI();
+}
+
+/* ========= UI wiring ========= */
+function show(id){ for(const el of document.querySelectorAll('.panel')) el.classList.remove('show'); document.getElementById(id).classList.add('show'); }
+
+const startBtn=document.getElementById('startBtn');
+const pauseBtn=document.getElementById('pauseBtn');
+const resumeBtn=document.getElementById('resumeBtn');
+const restartBtn=document.getElementById('restartBtn');
+const menuBtn=document.getElementById('menuBtn');
+const retryBtn=document.getElementById('retryBtn');
+const goMenuBtn=document.getElementById('goMenuBtn');
+const shopBtnTop=document.getElementById('shopBtnTop');
+const openShopBtn=document.getElementById('openShopBtn');
+const closeShopBtn=document.getElementById('closeShopBtn');
+const muteBtn=document.getElementById('muteBtn');
+const howBtn=document.getElementById('howBtn');
+const closeHowBtn=document.getElementById('closeHowBtn');
+
+startBtn.onclick=()=>{ document.getElementById('menu').classList.remove('show'); init(); };
+pauseBtn.onclick=()=>{ if(!running||over) return; paused=true; show('paused'); };
+resumeBtn.onclick=()=>{ paused=false; show('menu'); document.getElementById('menu').classList.remove('show'); document.getElementById('gameUI').style.display='block'; running=true; loop(performance.now()); };
+restartBtn.onclick=()=>{ show('menu'); document.getElementById('menu').classList.remove('show'); init(); };
+menuBtn.onclick=()=>{ running=false; show('menu'); document.getElementById('gameUI').style.display='none'; };
+retryBtn.onclick=()=>{ show('menu'); document.getElementById('menu').classList.remove('show'); init(); };
+goMenuBtn.onclick=()=>{ show('menu'); };
+openShopBtn.onclick=()=>{ renderShop(); show('shop'); };
+shopBtnTop.onclick=()=>{ renderShop(); show('shop'); running=false; };
+closeShopBtn.onclick=()=>{ show('menu'); };
+howBtn.onclick=()=>{ show('how'); };
+closeHowBtn.onclick=()=>{ show('menu'); };
+muteBtn.onclick=()=>{ muted=!muted; localStorage.setItem('muted', JSON.stringify(muted)); muteBtn.textContent=muted?'🔇':'🔊'; };
+muteBtn.textContent=muted?'🔇':'🔊';
+
+/* input */
+document.getElementById('leftBtn').onclick=()=>{ if(running) player.switch(-1); };
+document.getElementById('rightBtn').onclick=()=>{ if(running) player.switch(1); };
+addEventListener('pointerdown',(e)=>{ if(!running) return; const rect=canvas.getBoundingClientRect(); if(e.clientX<rect.left+rect.width/2) player.switch(-1); else player.switch(1); });
+addEventListener('keydown', (e)=>{
+  if(e.code==='ArrowLeft'||e.code==='KeyA') player.switch(-1);
+  if(e.code==='ArrowRight'||e.code==='KeyD') player.switch(1);
+  if(e.code==='Space'){
+    if(!running){ document.getElementById('menu').classList.remove('show'); init(); }
+    else { paused=!paused; paused?show('paused'):document.getElementById('paused').classList.remove('show'); }
+  }
+});
+
+/* init menu values */
+document.getElementById('bestScoreMenu').textContent=best; updateCoinsUI(); renderShop(); show('menu');
+addEventListener('contextmenu', e=>e.preventDefault());
+</script>
+</body>
+</html>
