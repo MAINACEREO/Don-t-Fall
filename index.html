@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <title>Mini Terra Pro</title>
+    <style>
+      html,body,#app{height:100%;margin:0;background:#061223;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto}
+      #hud{position:fixed;right:8px;top:8px;background:rgba(0,0,0,0.28);padding:6px 10px;border-radius:8px;z-index:40}
+      .topbar{position:fixed;left:8px;top:8px;display:flex;gap:8px;z-index:40}
+      .btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#fff;padding:6px 8px;border-radius:8px;cursor:pointer}
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="hud">Score:0 HP:5</div>
+    <div class="topbar">
+      <button class="btn" id="btnSave">Save</button>
+      <button class="btn" id="btnLoad">Load</button>
+      <button class="btn" id="btnDebug">Debug</button>
+      <button class="btn" id="btnChunk">Chunk ON</button>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
