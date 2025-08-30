@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Mafia — Born to Death • Chapter 1 (The Awakening)</title>
+<style>
+  :root{
+    --bg:#0b1117;--panel:#101822;--ink:#e9f3ff;--muted:#a9b7c6;--accent:#ff7a2a;--line:rgba(255,255,255,.09)
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#071018,#0b1421);color:var(--ink);font-family:Inter,system-ui,Arial,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  header.appbar{display:flex;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.2);backdrop-filter:blur(6px);position:sticky;top:0;z-index:5}
+  .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#ffb37f);display:flex;align-items:center;justify-content:center;color:#1a110c;font-weight:900}
+  .title{font-size:18px;font-weight:800}
+  .sub{color:var(--muted);font-size:12px}
+  .screen{display:none;min-height:calc(100vh - 70px)}
+  .screen.active{display:block}
+  .panel{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.01));border:1px solid var(--line);border-radius:14px;padding:12px}
+  .grid{display:grid;gap:12px}
+  .start-grid{grid-template-columns:1fr}
+  @media(min-width:920px){.start-grid{grid-template-columns:1.1fr .9fr}}
+  input,select,button{font:inherit}
+  input,select{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink)}
+  .btn{padding:.8rem 1rem;border-radius:10px;background:#18222c;color:var(--ink);border:1px solid var(--line);cursor:pointer}
+  .btn.primary{background:var(--accent);color:#1b120d;border-color:transparent;font-weight:800}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .hero{height:230px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#0d1620 url('') center/cover no-repeat;color:#bfe;font-weight:900;letter-spacing:.08em}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  #avatar{width:56px;height:56px;border-radius:12px;background:#17212b;display:flex;align-items:center;justify-content:center;font-weight:900}
+  .stat{display:flex;justify-content:space-between;margin:6px 0}
+  .bar{height:8px;background:#12202b;border-radius:6px;overflow:hidden}
+  .fill{height:100%;width:0;background:linear-gradient(90deg,#ffe3c9,var(--accent))}
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{padding:.25rem .6rem;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
+  .sceneHead{display:flex;gap:12px;justify-content:space-between;align-items:center}
+  .imgSlot{height:180px;border-radius:10px;overflow:hidden;flex:0 0 260px;border:1px solid var(--line);background:#0b1219}
+  .imgSlot img{width:100%;height:100%;object-fit:cover}
+  .qcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .question{font-weight:700;margin:6px 0}
+  .options{display:grid;grid-template-columns:1fr;gap:8px}
+  .meta{color:var(--muted);font-size:12px}
+  .foot{margin-top:8px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header class="appbar">
+  <div class="logo">MF</div>
+  <div>
+    <div class="title">Mafia — Born to Death</div>
+    <div class="sub">Chapter 1 • The Awakening • Choice-driven</div>
+  </div>
+  <div style="margin-left:auto" class="sub" id="hud">—</div>
+</header>
+
+<div class="wrap">
+  <!-- START -->
+  <section id="start" class="screen active">
+    <div class="grid start-grid">
+      <div class="panel">
+        <div id="menuHero" class="hero">MAIN MENU</div>
+        <div class="row" style="margin-top:12px">
+          <div id="avatar">U</div>
+          <input id="playerName" placeholder="Your name (e.g., Aiden)"/>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <select id="origin">
+            <option value="city">City drifter</option>
+            <option value="coast">Coastal wanderer</option>
+            <option value="north">Northern exile</option>
+          </select>
+          <select id="look">
+            <option value="boss">Tough look</option>
+            <option value="slick">Sleek suit</option>
+            <option value="ghost">Low profile</option>
+          </select>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" id="startBtn">Start Chapter 1</button>
+          <button class="btn" id="randBtn">Randomize</button>
+          <button class="btn" id="loadStart">Load Save</button>
+          <button class="btn" id="muteBtn">Mute</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Chapter 1 — The Awakening</h3>
+        <div class="stat"><span>Trust</span><span id="tNum">50</span></div>
+        <div class="bar"><div id="tBar" class="fill" style="width:50%"></div></div>
+        <div class="stat"><span>Suspicion</span><span id="sNum">20</span></div>
+        <div class="bar"><div id="sBar" class="fill" style="width:20%"></div></div>
+        <div class="stat"><span>Resources</span><span id="rNum">30</span></div>
+        <div class="bar"><div id="rBar" class="fill" style="width:30%"></div></div>
+        <p class="foot">Tip: You can change images & music by just replacing file paths in the config.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="screen">
+    <div class="panel">
+      <div class="toolbar">
+        <button class="btn" id="btnMenu">Main Menu</button>
+        <button class="btn" id="btnSave">Save</button>
+        <button class="btn" id="btnLoad">Load</button>
+        <span class="pill" id="pillScene">Scene 1/5</span>
+        <span class="pill" id="pillAct">Act 1/5</span>
+        <span class="pill" id="pillQ">Q 1/3</span>
+      </div>
+
+      <div class="panel" style="margin-top:10px">
+        <div class="sceneHead">
+          <div>
+            <div id="sceneTitle" class="title">Scene</div>
+            <div id="sceneMeta" class="meta">—</div>
+          </div>
+          <div class="imgSlot"><img id="sceneImg" alt="scene art" /></div>
+        </div>
+      </div>
+
+      <div id="questionArea" class="qcard" style="margin-top:12px">
+        <div id="qHeader" class="meta">Question 1/3</div>
+        <div id="qText" class="question"> … </div>
+        <div id="options" class="options"></div>
+      </div>
+
+      <div class="panel" style="margin-top:12px">
+        <div class="stat"><span>Trust</span><span id="tNum2">—</span></div>
+        <div class="bar"><div id="tBar2" class="fill"></div></div>
+        <div class="stat"><span>Suspicion</span><span id="sNum2">—</span></div>
+        <div class="bar"><div id="sBar2" class="fill"></div></div>
+        <div class="stat"><span>Resources</span><span id="rNum2">—</span></div>
+        <div class="bar"><div id="rBar2" class="fill"></div></div>
+      </div>
+
+      <div class="foot">Headphones recommended. Your choices affect stats and unlock later branches.</div>
+    </div>
+  </section>
+</div>
+
+<!-- Audio -->
+<audio id="bgm" preload="auto" loop></audio>
+<audio id="sfxClick" preload="auto"></audio>
+<audio id="sfxSelect" preload="auto"></audio>
+
+<script>
+/* =========================
+   CONFIG — put your files here
+   ========================= */
+const ASSETS = {
+  images: {
+    mainMenu: "assets/bg_menu.jpg",         // Main menu background
+    scenes: [                               // One background per scene (5)
+      "assets/ch1_scene1.jpg",
+      "assets/ch1_scene2.jpg",
+      "assets/ch1_scene3.jpg",
+      "assets/ch1_scene4.jpg",
+      "assets/ch1_scene5.jpg"
+    ],
+    // Optional: per-act backgrounds (overrides scene bg if present)
+    perAct: {
+      // "1-3": "assets/ch1_scene1_act3.jpg" // format: "sceneIndex-actIndex" (1-based)
+    }
+  },
+  music: {
+    scenes: [                               // One bgm per scene (5)
+      "assets/music_ch1_s1.mp3",
+      "assets/music_ch1_s2.mp3",
+      "assets/music_ch1_s3.mp3",
+      "assets/music_ch1_s4.mp3",
+      "assets/music_ch1_s5.mp3"
+    ],
+    volume: 0.7
+  },
+  sfx: {
+    click: "assets/ui_click.mp3",           // button click
+    select: "assets/ui_select.mp3"          // option chosen
+  }
+};
+
+/* ========== Narrative Setup (Global tone) ========== */
+const THEMES = [
+  { name:"The Arrival",     meta:"Neon towers, cold wind, a city that never blinks." },
+  { name:"The Stranger",    meta:"Footsteps in sync with yours. A masked silhouette." },
+  { name:"The Veil",        meta:"Rumors of a hidden faction moving in plain sight." },
+  { name:"The Chase",       meta:"Sirens. Drones. Splitting paths through steel alleys." },
+  { name:"The Revelation",  meta:"Two versions of truth collide. You must choose." }
+];
+
+// Prompts used across acts/questions
+const q1Prompts = [
+  "You step off the transit line. First instinct?",
+  "The figure keeps pace behind you. Your move?",
+  "A messenger from the Veil approaches. Response?",
+  "Alarms explode overhead. Escape route?",
+  "The city asks one final question. Where do you stand?"
+];
+const q2Prompts = {
+  A:[
+    "A drone scans the street. Crowd or shadows?",
+    "The follower speaks softly. What do you demand?",
+    "They offer initiation. What do you risk first?",
+    "A barricade rises ahead. What do you attempt?",
+    "The Veil and the Council wait. Who hears you first?"
+  ],
+  B:[
+    "Security beacons flicker. What draws your eye?",
+    "You find a mark on your jacket. Interpret how?",
+    "You eavesdrop on strategy talk. What do you note?",
+    "You hear boots closing in. What do you trust?",
+    "You review your notes. Which proof matters?"
+  ],
+  C:[
+    "A street vendor signals a hidden door. Reaction?",
+    "Guards sweep the block. How do you blend?",
+    "A coded tablet unlocks. Which file first?",
+    "A subway gate hisses open. Where next?",
+    "A final message pings your device. What reply?"
+  ]
+};
+const q3Prompts = {
+  A:[
+    "A stranger offers a quick alliance. Accept how?",
+    "The mask tilts. How honest are you?",
+    "The rite begins. What intention do you declare?",
+    "The drop-point is in sight. What pace?",
+    "This choice will echo. Which version of you speaks?"
+  ],
+  B:[
+    "A child points at a drone tailing you. What do you teach?",
+    "They hand you a coin with an eye. What do you say?",
+    "You glimpse a map of power lines. What’s your angle?",
+    "A rooftop jump looms. What do you trust in?",
+    "A silent vote awaits. What do you value most?"
+  ],
+  C:[
+    "A courier knocks with a sealed note. Open how?",
+    "The alley narrows. What do you discard?",
+    "An encrypted channel opens. What handle do you choose?",
+    "A train roars in. What carriage do you board?",
+    "Your reflection stares back. What promise now?"
+  ]
+};
+
+/* ========== Build Chapter 1 (5 scenes × 5 acts × branching Qs) ========== */
+function buildChapter1(playerName="Player"){
+  const scenes=[];
+  for(let s=0;s<5;s++){
+    const acts=[];
+    for(let a=0;a<5;a++){
+      const act = {
+        name:`Act ${a+1}`,
+        questions:{
+          Q1:{
+            text: q1Prompts[s],
+            options:[
+              {label:"Observe quietly",  eff:{trust:+2,susp:+1}, next:"Q2A"},
+              {label:"Ask direct questions", eff:{trust:+1,susp:+2}, next:"Q2B"},
+              {label:"Keep a low profile", eff:{susp:-1}, next:"Q2C"}
+            ]
+          },
+          Q2A:{
+            text: q2Prompts.A[s],
+            options:[
+              {label:"Mingle with the crowd", eff:{trust:+2}, next:"Q3A"},
+              {label:"Watch from the edge",  eff:{susp:+2}, next:"Q3B"},
+              {label:"Slip into a side street", eff:{trust:+1,susp:+1}, next:"Q3C"}
+            ]
+          },
+          Q2B:{
+            text: q2Prompts.B[s],
+            options:[
+              {label:"Follow the signal", eff:{susp:+1,resources:+1}, next:"Q3A"},
+              {label:"Document everything", eff:{resources:+2}, next:"Q3B"},
+              {label:"Pretend ignorance", eff:{trust:+1}, next:"Q3C"}
+            ]
+          },
+          Q2C:{
+            text: q2Prompts.C[s],
+            options:[
+              {label:"Enter boldly", eff:{trust:+1,susp:+1}, next:"Q3A"},
+              {label:"Blend and wait", eff:{susp:-1}, next:"Q3B"},
+              {label:"Mark the location for later", eff:{resources:+1}, next:"Q3C"}
+            ]
+          },
+          Q3A:{
+            text: q3Prompts.A[s],
+            options:[
+              {label:"Accept with caution", eff:{trust:+2}, next:"END_ACT"},
+              {label:"Negotiate terms", eff:{trust:+1,resources:+1}, next:"END_ACT"},
+              {label:"Refuse politely", eff:{susp:+1}, next:"END_ACT"}
+            ]
+          },
+          Q3B:{
+            text: q3Prompts.B[s],
+            options:[
+              {label:"Teach restraint", eff:{trust:+1}, next:"END_ACT"},
+              {label:"Speak in codes", eff:{susp:-1}, next:"END_ACT"},
+              {label:"Bet on timing", eff:{resources:+1}, next:"END_ACT"}
+            ]
+          },
+          Q3C:{
+            text: q3Prompts.C[s],
+            options:[
+              {label:"Open and commit", eff:{trust:+2,susp:+1}, next:"END_ACT"},
+              {label:"Open and memorize", eff:{resources:+2}, next:"END_ACT"},
+              {label:"Leave it sealed", eff:{susp:-1}, next:"END_ACT"}
+            ]
+          }
+        }
+      };
+      acts.push(act);
+    }
+    scenes.push({
+      id:s+1,
+      name: THEMES[s].name,
+      meta: THEMES[s].meta.replace("{name}", playerName),
+      bg: ASSETS.images.scenes[s] || "",
+      music: ASSETS.music.scenes[s] || "",
+      acts
+    });
+  }
+  return { id:1, title:"The Awakening", scenes };
+}
+
+/* ==================== STATE ==================== */
+const STORAGE_KEY = "mf_ch1_save_v2";
+let state = {
+  player:{ name:"", origin:"city", look:"boss" },
+  stats:{ trust:50, susp:20, resources:30 },
+  sceneIndex:0, actIndex:0, qKey:"Q1",
+  chapter:null, muted:false
+};
+
+/* ==================== HELPERS ==================== */
+const $ = s=>document.querySelector(s);
+const clamp=(v,a=0,b=120)=>Math.max(a,Math.min(b,v));
+function setBars(){
+  const {trust,susp,resources}=state.stats;
+  $("#tNum").textContent=trust; $("#tBar").style.width=Math.min(100,trust)+"%";
+  $("#sNum").textContent=susp;  $("#sBar").style.width=Math.min(100,susp)+"%";
+  $("#rNum").textContent=resources; $("#rBar").style.width=Math.min(100,resources)+"%";
+
+  $("#tNum2").textContent=trust; $("#tBar2").style.width=Math.min(100,trust)+"%";
+  $("#sNum2").textContent=susp;  $("#sBar2").style.width=Math.min(100,susp)+"%";
+  $("#rNum2").textContent=resources; $("#rBar2").style.width=Math.min(100,resources)+"%";
+}
+function hud(){
+  $("#hud").textContent = `Scene ${state.sceneIndex+1}/5 • Act ${state.actIndex+1}/5 • ${state.qKey}`;
+  $("#pillScene").textContent = `Scene ${state.sceneIndex+1}/5`;
+  $("#pillAct").textContent   = `Act ${state.actIndex+1}/5`;
+  $("#pillQ").textContent     = `Q ${state.qKey==="Q1"?1:(state.qKey.startsWith("Q2")?2:3)}/3`;
+}
+function show(sel){ document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active")); $(sel).classList.add("active"); }
+function playBGM(url){
+  const a=$("#bgm"); if(!url){a.pause();return;}
+  if(a.src!==url){ a.src=url; }
+  a.volume = ASSETS.music.volume;
+  if(!state.muted) a.play().catch(()=>{});
+}
+function sfx(id){
+  const el = id==="click" ? $("#sfxClick") : $("#sfxSelect");
+  if(!el.src || el.src.endsWith("#")) return;
+  if(state.muted) return;
+  el.currentTime = 0; el.play().catch(()=>{});
+}
+
+/* Preload hero & sfx */
+window.addEventListener("load",()=>{
+  $("#menuHero").style.backgroundImage = `url('${ASSETS.images.mainMenu}')`;
+  $("#sfxClick").src = ASSETS.sfx.click || "#";
+  $("#sfxSelect").src= ASSETS.sfx.select || "#";
+});
+
+/* ==================== RENDER ==================== */
+function renderStart(){
+  $("#avatar").textContent = (state.player.name||"U").charAt(0).toUpperCase();
+  setBars(); hud();
+  show("#start");
+}
+function currentBG(){
+  const key = `${state.sceneIndex+1}-${state.actIndex+1}`;
+  return ASSETS.images.perAct[key] || state.chapter.scenes[state.sceneIndex].bg;
+}
+function renderGame(){
+  const scene = state.chapter.scenes[state.sceneIndex];
+  const act = scene.acts[state.actIndex];
+  $("#sceneTitle").textContent = `Scene ${scene.id}: ${scene.name}`;
+  $("#sceneMeta").textContent  = scene.meta;
+  $("#sceneImg").src = currentBG() || "";
+  const q = act.questions[state.qKey];
+  $("#qHeader").textContent = `Question ${state.qKey==="Q1"?1:(state.qKey.startsWith("Q2")?2:3)}/3`;
+  $("#qText").textContent   = q.text;
+  const box=$("#options"); box.innerHTML="";
+  q.options.forEach((op,i)=>{
+    const b=document.createElement("button");
+    b.className = i===0?"btn":"btn";
+    b.textContent = `${i+1}. ${op.label}`;
+    b.onclick=()=>{ sfx("select"); choose(op); };
+    box.appendChild(b);
+  });
+  setBars(); hud(); show("#game");
+  playBGM(scene.music);
+}
+
+/* ==================== FLOW ==================== */
+function applyEff(eff={}){
+  const s=state.stats;
+  if(eff.trust) s.trust = clamp(s.trust + eff.trust);
+  if(eff.susp)  s.susp  = clamp(s.susp  + eff.susp);
+  if(eff.resources) s.resources = Math.max(0, s.resources + eff.resources);
+}
+function choose(op){
+  applyEff(op.eff||{});
+  if(op.next==="END_ACT"){ nextActOrScene(); return; }
+  state.qKey = op.next;
+  renderGame();
+}
+function nextActOrScene(){
+  if(state.actIndex<4){ state.actIndex++; state.qKey="Q1"; renderGame(); return; }
+  if(state.sceneIndex<4){ state.sceneIndex++; state.actIndex=0; state.qKey="Q1"; renderGame(); return; }
+  // Finale
+  $("#qHeader").textContent="Chapter 1 — Decision";
+  $("#qText").textContent="Your path is set. Where do you lean as the city watches?";
+  const box=$("#options"); box.innerHTML="";
+  ["Join the Veil (underground)","Support the City Council (establishment)","Walk alone (rogue)"].forEach((label,i)=>{
+    const b=document.createElement("button");
+    b.className = i===0?"btn primary":"btn";
+    b.textContent = label;
+    b.onclick=()=>{ sfx("select"); alert(`Saved choice: ${label}. Chapter 2 will branch from this.`); saveGame(); renderStart(); };
+    box.appendChild(b);
+  });
+}
+
+/* ==================== SAVE / LOAD ==================== */
+function saveGame(){
+  const data = JSON.stringify(state);
+  localStorage.setItem(STORAGE_KEY, data);
+  alert("Game saved!");
+}
+function loadGame(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return alert("No save found.");
+  try{
+    state = JSON.parse(raw);
+    if(!state.chapter) state.chapter = buildChapter1(state.player.name||"Player");
+    renderGame();
+  }catch(e){ alert("Save corrupted."); }
+}
+
+/* ==================== UI EVENTS ==================== */
+const names=["Aiden","Nova","Rin","Juno","Mika","Arin","Sage","Kade","Rhea","Kora"];
+$("#playerName").addEventListener("input",e=> $("#avatar").textContent=(e.target.value||"U").charAt(0).toUpperCase());
+$("#randBtn").addEventListener("click",()=>{ sfx("click");
+  $("#playerName").value = names[Math.floor(Math.random()*names.length)];
+  $("#avatar").textContent = $("#playerName").value.charAt(0).toUpperCase();
+  $("#origin").value = ["city","coast","north"][Math.floor(Math.random()*3)];
+  $("#look").value   = ["boss","slick","ghost"][Math.floor(Math.random()*3)];
+});
+$("#startBtn").addEventListener("click",()=>{ sfx("click");
+  state.player.name = ($("#playerName").value||"Player").trim();
+  state.player.origin = $("#origin").value;
+  state.player.look   = $("#look").value;
+  // tiny stat tweaks
+  if(state.player.origin==="coast") state.stats.resources+=4;
+  if(state.player.origin==="north") state.stats.trust+=4;
+  if(state.player.look==="ghost")   state.stats.susp=Math.max(0,state.stats.susp-3);
+  if(state.player.look==="boss")    {state.stats.trust+=2; state.stats.susp+=2;}
+  // boot chapter
+  state.sceneIndex=0; state.actIndex=0; state.qKey="Q1";
+  state.chapter = buildChapter1(state.player.name);
+  renderGame();
+});
+$("#btnMenu").addEventListener("click",()=>{ sfx("click"); renderStart(); });
+$("#btnSave").addEventListener("click",()=>{ sfx("click"); saveGame(); });
+$("#btnLoad").addEventListener("click",()=>{ sfx("click"); loadGame(); });
+$("#loadStart").addEventListener("click",()=>{ sfx("click"); loadGame(); });
+
+$("#muteBtn").addEventListener("click",()=>{
+  state.muted=!state.muted;
+  const a=$("#bgm"); if(state.muted){ a.pause(); } else { a.play().catch(()=>{}); }
+  $("#muteBtn").textContent = state.muted ? "Unmute" : "Mute";
+});
+
+/* ========== Boot ========== */
+function initialBars(){ // set start screen bars to base values
+  $("#tBar").style.width="50%"; $("#sBar").style.width="20%"; $("#rBar").style.width="30%";
+  $("#tNum").textContent="50"; $("#sNum").textContent="20"; $("#rNum").textContent="30";
+}
+initialBars();
+</script>
+</body>
+</html>
