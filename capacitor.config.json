@@ -1,6 +1,0 @@
-{
-  "appId": "com.yourcompany.miniterrapro",
-  "appName": "Mini Terra Pro",
-  "webDir": "dist",
-  "bundledWebRuntime": false
-}
